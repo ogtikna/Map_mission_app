@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot-Spotter-Dash Application (Google Maps)</title>
+    <title>"GANDIV MISSION CONTROL"</title>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
         :root {
             --primary-font: 'Poppins', sans-serif;
@@ -14,10 +14,12 @@
             --secondary-bg: #2c2c2c;
             --text-light: #f0f0f0;
             --text-dark: #cccccc;
-            --accent-color: #0d6efd; /* A slightly different blue for better contrast */
+            --accent-color: #0d6efd;
             --accent-hover: #0b5ed7;
-            --pilot-path-color: #ffc107;
-            --spotter-pin-color: #198754; /* A slightly different green */
+            --pilot-path-color: #0d6efd; /* CHANGED: Path color now matches accent color */
+            --spotter-pin-color: #198754;
+            --danger-color: #dc3545;
+            --danger-hover: #bb2d3b;
             --shadow: 0 10px 30px rgba(0,0,0,0.5);
             --transition-speed: 0.3s;
         }
@@ -45,6 +47,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
         .page.active {
@@ -52,16 +55,25 @@
         }
 
         /* --- Home Page Styles --- */
-        #home-page {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1620451979434-3519d203942d?q=80&w=1470&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            gap: 2rem;
+        .home-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-bg);
+            gap: 1.5rem;
         }
 
-        #home-page h1 {
-            font-size: 3rem;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+        #brand-title {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 24px;
+            color: var(--text-light);
+            margin-bottom: 1rem;
         }
 
         .role-buttons {
@@ -148,6 +160,18 @@
         .action-btn:hover {
             background-color: var(--accent-hover);
         }
+        
+        .clear-btn {
+            background-color: var(--danger-color);
+        }
+        .clear-btn:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
 
         .home-btn {
             margin-top: auto; /* Pushes button to the bottom */
@@ -204,11 +228,13 @@
 
     <!-- Home Page -->
     <div id="home-page" class="page active">
-        <h1>Mission Control</h1>
-        <div class="role-buttons">
-            <button class="role-btn" onclick="showPage('pilot-page')">Pilot</button>
-            <button class="role-btn" onclick="showPage('spotter-page')">Spotter</button>
-            <button class="role-btn" onclick="showPage('dash-page')">Dash</button>
+        <div class="home-content">
+            <h1 id="brand-title">GANDIV MISSION CONTROL</h1>
+            <div class="role-buttons">
+                <button class="role-btn" onclick="showPage('pilot-page')">Pilot</button>
+                <button class="role-btn" onclick="showPage('spotter-page')">Spotter</button>
+                <button class="role-btn" onclick="showPage('dash-page')">Dash</button>
+            </div>
         </div>
     </div>
 
@@ -221,7 +247,10 @@
                 <label for="path-remark">Path Remark</label>
                 <textarea id="path-remark" rows="4" placeholder="Enter notes about the planned route..."></textarea>
             </div>
-            <button class="action-btn" onclick="pilotApp.savePath()">Save Path</button>
+            <div class="button-group">
+                <button class="action-btn" onclick="pilotApp.savePath()">Save Path</button>
+                <button class="action-btn clear-btn" onclick="pilotApp.clearLastPoint()">Clear</button>
+            </div>
             <button class="home-btn" onclick="showPage('home-page')">Home</button>
         </div>
     </div>
@@ -235,7 +264,10 @@
                 <label for="pin-description">Pin Description</label>
                 <textarea id="pin-description" rows="4" placeholder="Describe the observation at the marked pin..."></textarea>
             </div>
-            <button class="action-btn" onclick="spotterApp.savePin()">Save Pin</button>
+            <div class="button-group">
+                <button class="action-btn" onclick="spotterApp.savePin()">Save Pin</button>
+                <button class="action-btn clear-btn" onclick="spotterApp.clearPins()">Clear Pins</button>
+            </div>
             <p style="font-size: 0.9rem; color: var(--text-dark);">Click on the map to place a pin, then add a description and save.</p>
             <button class="home-btn" onclick="showPage('home-page')">Home</button>
         </div>
@@ -250,6 +282,7 @@
                 <h3>Pilot's Path Remark:</h3>
                 <p id="dash-path-remark">No path data found.</p>
             </div>
+             <button class="action-btn clear-btn" onclick="dashApp.clearAllData()">Clear All Data</button>
             <button class="home-btn" onclick="showPage('home-page')">Home</button>
         </div>
     </div>
@@ -276,9 +309,30 @@
             }
         }
 
+        // --- Map Style ---
+        const mapStyle = [
+            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+            { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+            { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+            { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+            { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+            { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+            { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+            { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+            { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+            { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+            { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
+            { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+            { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+            { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+            { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] },
+        ];
+        
         // --- Map Initialization ---
         function initMap(mapType) {
-            // Do not proceed if the Google Maps API is not ready yet.
             if (!isGoogleMapsReady) {
                 console.log('Google Maps API not ready yet. Deferring map initialization.');
                 return;
@@ -295,28 +349,6 @@
                 return;
             }
 
-            // Dark mode style for Google Maps
-            const mapStyle = [
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-                { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-                { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
-                { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
-                { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-                { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-                { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-                { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
-                { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
-                { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
-                { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
-                { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-                { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-                { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] },
-            ];
-
             maps[mapType] = new google.maps.Map(document.getElementById(`${mapType}-map`), {
                 center: KOTA_COORDS,
                 zoom: 13,
@@ -332,6 +364,7 @@
         const dataStore = {
             get: (key) => JSON.parse(localStorage.getItem(key)),
             set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+            remove: (key) => localStorage.removeItem(key),
         };
 
         function clearOverlays(mapType) {
@@ -349,7 +382,6 @@
             },
 
             drawPath: function(e) {
-                console.log('Pilot map clicked at:', e.latLng.toJSON());
                 this.pathCoords.push({ lat: e.latLng.lat(), lng: e.latLng.lng() });
                 this.updatePathOnMap();
             },
@@ -360,12 +392,19 @@
                     const polyline = new google.maps.Polyline({
                         path: this.pathCoords,
                         geodesic: true,
-                        strokeColor: 'var(--pilot-path-color)',
+                        strokeColor: '#0d6efd', // CHANGED: Direct hex code for blue
                         strokeOpacity: 1.0,
                         strokeWeight: 4,
                     });
                     polyline.setMap(maps.pilot);
                     overlays.pilot.push(polyline);
+                } else if (this.pathCoords.length === 1) {
+                    // If only one point, show a marker
+                    const marker = new google.maps.Marker({
+                        position: this.pathCoords[0],
+                        map: maps.pilot,
+                    });
+                     overlays.pilot.push(marker);
                 }
             },
 
@@ -385,6 +424,13 @@
                 this.pathCoords = pathData ? pathData.coords : [];
                 document.getElementById('path-remark').value = pathData ? pathData.remark : '';
                 this.updatePathOnMap();
+            },
+
+            clearLastPoint: function() {
+                if (this.pathCoords.length > 0) {
+                    this.pathCoords.pop(); // Remove the last point
+                    this.updatePathOnMap(); // Redraw the path
+                }
             }
         };
 
@@ -399,7 +445,6 @@
             },
 
             placeTempPin: function(e) {
-                console.log('Spotter map clicked at:', e.latLng.toJSON());
                 if (this.tempPin) {
                     this.tempPin.setMap(null);
                 }
@@ -454,7 +499,7 @@
                 if (pathData && pathData.coords.length > 1) {
                     const polyline = new google.maps.Polyline({
                         path: pathData.coords,
-                        strokeColor: 'var(--pilot-path-color)',
+                        strokeColor: '#0d6efd', // CHANGED: Direct hex code for blue
                         strokeOpacity: 0.8,
                         strokeWeight: 4,
                         map: maps.spotter,
@@ -465,6 +510,13 @@
                 this.pins = dataStore.get('spotterPins') || [];
                 this.updatePinsOnMap();
             },
+
+            clearPins: function() {
+                if (confirm('Are you sure you want to clear all saved pins?')) {
+                    dataStore.remove('spotterPins');
+                    this.load();
+                }
+            }
         };
 
         // --- Dashboard Application Logic ---
@@ -484,7 +536,7 @@
                 if (pathData && pathData.coords.length > 1) {
                     const polyline = new google.maps.Polyline({
                         path: pathData.coords,
-                        strokeColor: 'var(--pilot-path-color)',
+                        strokeColor: '#0d6efd', // CHANGED: Direct hex code for blue
                         strokeOpacity: 1.0,
                         strokeWeight: 4,
                         map: maps.dash,
@@ -512,6 +564,14 @@
                     });
                     overlays.dash.push(marker);
                 });
+            },
+
+            clearAllData: function() {
+                if (confirm('Are you sure you want to clear ALL saved data? This action cannot be undone.')) {
+                    dataStore.remove('pilotPath');
+                    dataStore.remove('spotterPins');
+                    this.load();
+                }
             }
         };
 
@@ -525,6 +585,7 @@
         function initGoogleMaps() {
             console.log('Google Maps API is ready.');
             isGoogleMapsReady = true;
+            
             // If a map page was already selected before the API loaded, initialize it now.
             if (activePage !== 'home-page') {
                 const mapType = activePage.split('-')[0];
