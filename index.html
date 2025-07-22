@@ -16,7 +16,7 @@
             --text-dark: #cccccc;
             --accent-color: #0d6efd;
             --accent-hover: #0b5ed7;
-            --pilot-path-color: #0d6efd; /* CHANGED: Path color now matches accent color */
+            --pilot-path-color: #0d6efd; /* Path color now matches accent color */
             --spotter-pin-color: #198754;
             --danger-color: #dc3545;
             --danger-hover: #bb2d3b;
@@ -392,14 +392,13 @@
                     const polyline = new google.maps.Polyline({
                         path: this.pathCoords,
                         geodesic: true,
-                        strokeColor: '#0d6efd', // CHANGED: Direct hex code for blue
+                        strokeColor: '#0d6efd',
                         strokeOpacity: 1.0,
                         strokeWeight: 4,
                     });
                     polyline.setMap(maps.pilot);
                     overlays.pilot.push(polyline);
                 } else if (this.pathCoords.length === 1) {
-                    // If only one point, show a marker
                     const marker = new google.maps.Marker({
                         position: this.pathCoords[0],
                         map: maps.pilot,
@@ -430,6 +429,11 @@
                 if (this.pathCoords.length > 0) {
                     this.pathCoords.pop(); // Remove the last point
                     this.updatePathOnMap(); // Redraw the path
+                    
+                    // Save the updated path to localStorage so other pages see the change
+                    const remark = document.getElementById('path-remark').value;
+                    const pathData = { remark, coords: this.pathCoords };
+                    dataStore.set('pilotPath', pathData);
                 }
             }
         };
@@ -499,7 +503,7 @@
                 if (pathData && pathData.coords.length > 1) {
                     const polyline = new google.maps.Polyline({
                         path: pathData.coords,
-                        strokeColor: '#0d6efd', // CHANGED: Direct hex code for blue
+                        strokeColor: '#0d6efd',
                         strokeOpacity: 0.8,
                         strokeWeight: 4,
                         map: maps.spotter,
@@ -536,7 +540,7 @@
                 if (pathData && pathData.coords.length > 1) {
                     const polyline = new google.maps.Polyline({
                         path: pathData.coords,
-                        strokeColor: '#0d6efd', // CHANGED: Direct hex code for blue
+                        strokeColor: '#0d6efd',
                         strokeOpacity: 1.0,
                         strokeWeight: 4,
                         map: maps.dash,
