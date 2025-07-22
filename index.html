@@ -266,7 +266,7 @@
             </div>
             <div class="button-group">
                 <button class="action-btn" onclick="spotterApp.savePin()">Save Pin</button>
-                <button class="action-btn clear-btn" onclick="spotterApp.clearPins()">Clear Pins</button>
+                <button class="action-btn clear-btn" onclick="spotterApp.clearLastPin()">Clear</button>
             </div>
             <p style="font-size: 0.9rem; color: var(--text-dark);">Click on the map to place a pin, then add a description and save.</p>
             <button class="home-btn" onclick="showPage('home-page')">Home</button>
@@ -515,9 +515,10 @@
                 this.updatePinsOnMap();
             },
 
-            clearPins: function() {
-                if (confirm('Are you sure you want to clear all saved pins?')) {
-                    dataStore.remove('spotterPins');
+            clearLastPin: function() {
+                if (this.pins.length > 0) {
+                    this.pins.pop();
+                    dataStore.set('spotterPins', this.pins);
                     this.load();
                 }
             }
